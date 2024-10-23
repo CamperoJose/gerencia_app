@@ -33,14 +33,13 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
-      extendBodyBehindAppBar: true, 
+      extendBodyBehindAppBar: true,
       body: Stack(
         children: [
           SizedBox.expand(
             child: Image.asset(
-              'assets/background.png', 
-              fit: BoxFit.cover, 
+              'assets/background.png',
+              fit: BoxFit.cover,
             ),
           ),
           Container(
@@ -55,12 +54,10 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
           ),
-
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-
                 const Text(
                   'Identificador de Placas',
                   style: TextStyle(
@@ -77,26 +74,22 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
                 const SizedBox(height: 40),
-
                 Hero(
                   tag: 'logo',
                   child: Image.asset(
                     'assets/plate_icon.png',
                     height: 200,
-
                   ),
                 ),
-
                 const SizedBox(height: 40),
-                // Botón personalizado
                 ElevatedButton(
                   onPressed: () => _takePhoto(context),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 50, vertical: 20),
-                    backgroundColor: const Color.fromARGB(255, 5, 86, 130), 
+                    backgroundColor: const Color.fromARGB(255, 5, 86, 130),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30), 
+                      borderRadius: BorderRadius.circular(30),
                     ),
                     shadowColor: Colors.black45,
                     elevation: 10,
