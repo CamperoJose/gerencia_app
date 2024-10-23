@@ -24,6 +24,10 @@ class _DisplayPhotoScreenState extends State<DisplayPhotoScreen> {
   String _imageUrl = "";
   bool _loading = false;
   bool _loadingImageFromServer = false; // Indica si se está cargando la imagen del servidor
+  String _plateStatus = ""; // Estado de la placa
+
+  // Lista de placas registradas
+  final List<String> _registeredPlates = ["5184XKA", "6363BKE"];
 
   Future<void> _detectLicensePlate() async {
     setState(() {
@@ -39,8 +43,9 @@ class _DisplayPhotoScreenState extends State<DisplayPhotoScreen> {
     img.Image? image = img.decodeImage(imageBytes);
 
     if (image != null) {
-      List<int> jpegData = img.encodeJpg(image);
-      var jpegFile = File('${imageFile.parent.path}/temp_image.jpg');
+      // Cambiando la extensión a .jpg
+      List<int> jpegData = img.encodeJpg(image, quality: 100); // 100 es la calidad máxima
+      var jpegFile = File('${imageFile.parent.path}/temp_image.jpg'); // Asegúrate de que la extensión sea .jpg
       await jpegFile.writeAsBytes(jpegData);
 
       // Agregar el archivo JPEG al request
@@ -58,6 +63,7 @@ class _DisplayPhotoScreenState extends State<DisplayPhotoScreen> {
               _plateNumber = jsonResponse['license_plate_data']['plate_number'] ?? "No se encontró la placa";
               _imageUrl = jsonResponse['image_url']?.replaceAll('localhost', '172.20.10.2') ?? "";
             });
+            await _checkPlateAndControlGate(_plateNumber); // Verificar placa y controlar compuerta
           } else {
             setState(() {
               _plateNumber = "No se detectó placa";
@@ -86,12 +92,32 @@ class _DisplayPhotoScreenState extends State<DisplayPhotoScreen> {
     }
   }
 
+  Future<void> _checkPlateAndControlGate(String plateNumber) async {
+    if (_registeredPlates.contains(plateNumber)) {
+      setState(() {
+        _plateStatus = "(Placa registrada)"; // Estado de la placa
+      });
+      // Mostrar mensaje de abriendo compuerta
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Abriendo compuerta...')),
+      );
+      await _openGate(); // Abrir compuerta
+      await Future.delayed(const Duration(seconds: 10)); // Esperar 10 segundos
+      await _closeGate(); // Cerrar compuerta
+    } else {
+      setState(() {
+        _plateStatus = "(Placa no registrada)"; // Estado de la placa
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Placa no registrada.')),
+      );
+    }
+  }
+
   Future<void> _openGate() async {
     final response = await http.get(Uri.parse('http://172.20.10.3/open'));
     if (response.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Compuerta abierta.')),
-      );
+      // Compuerta abierta, mostrar mensaje
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error al abrir la compuerta: ${response.statusCode}')),
@@ -190,9 +216,14 @@ class _DisplayPhotoScreenState extends State<DisplayPhotoScreen> {
                 ),
               ),
               const SizedBox(height: 20),
+              // Mostrar número de placa y su estado
               Text(
-                'Número de Placa:\n$_plateNumber',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue),
+                'Número de Placa:\n$_plateNumber $_plateStatus',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: _plateStatus.contains("registrada") ? Colors.green : Colors.blue,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
